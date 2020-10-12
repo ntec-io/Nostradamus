@@ -3,16 +3,14 @@ package fifaindex
 import "time"
 
 type Player struct {
-	Information  PlayerInformation
-	BallSkills   PlayerBallSkills
-	Defence      PlayerDefence
-	Mental       PlayerMental
-	Passing      PlayerPassing
-	Physical     PlayerPhysical
-	Shooting     PlayerShooting
-	Goalkeeper   PlayerGoalkeeper
-	Specialities []string
-	Team         Team
+	Information PlayerInformation
+	BallSkills  PlayerBallSkills
+	Defence     PlayerDefence
+	Mental      PlayerMental
+	Passing     PlayerPassing
+	Physical    PlayerPhysical
+	Shooting    PlayerShooting
+	Goalkeeper  PlayerGoalkeeper
 }
 
 type PlayerInformation struct {
@@ -85,8 +83,4 @@ type PlayerShooting struct {
 	FKAcc     int
 	Penalties int
 	Volleys   int
-}
-
-func GetPlayerStats(player, club string) (ps Player, err error) {
-	return
 }

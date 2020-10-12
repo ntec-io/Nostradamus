@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM ubuntu AS builder
 
 LABEL maintainer="Nicolas Goldack <admin@ntec.io>"
 
@@ -58,4 +58,13 @@ WORKDIR /nostradamus
 
 COPY . /nostradamus
 
-CMD ["go", "run", "/nostradamus"]
+RUN go get -u github.com/gocolly/colly/v2
+RUN go get -u gopkg.in/yaml.v2
+
+RUN go build /nostradamus
+
+FROM alpine:latest  
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /go/src/github.com/alexellis/href-counter/app .
+CMD ["./app"]  
