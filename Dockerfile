@@ -1,3 +1,4 @@
+# Build the project
 FROM ubuntu AS builder
 
 LABEL maintainer="Nicolas Goldack <admin@ntec.io>"
@@ -35,12 +36,12 @@ RUN apt-get update && apt-get upgrade && \
 RUN umask 0000
 
 # Install Go
-ENV GOLANG_VERSION 1.15.2
+ENV GOLANG_VERSION 1.15.3
 RUN set -eux; \
 	\
 	url="https://golang.org/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz"; \
 	wget -O go.tgz "$url"; \
-	echo "b49fda1ca29a1946d6bb2a5a6982cf07ccd2aba849289508ee0f9918f6bb4552 *go.tgz" | sha256sum -c -; \
+	echo "010a88df924a81ec21b293b5da8f9b11c176d27c0ee3962dc1738d2352d3c02d *go.tgz" | sha256sum -c -; \
 	tar -C /usr/local -xzf go.tgz; \
 	rm go.tgz; \
 	export PATH="/usr/local/go/bin:$PATH"; \
@@ -56,15 +57,30 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 WORKDIR /nostradamus
 
-COPY . /nostradamus
+# Install dependencies
+COPY go.mod go.sum ./
+RUN go mod download -x all
 
-RUN go get -u github.com/gocolly/colly/v2
-RUN go get -u gopkg.in/yaml.v2
+# Copy project files
+COPY . .
 
-RUN go build /nostradamus
+# Test project
+RUN go test -v .
 
-FROM alpine:latest  
+# Build the project
+RUN GOOS=linux go build -a -v -o app .
+
+
+# Runtime docker
+FROM alpine:latest AS runner
 RUN apk --no-cache add ca-certificates
+
+# Add docker-compose-wait tool
+ENV WAIT_VERSION 2.7.2
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/$WAIT_VERSION/wait /wait
+RUN chmod +x /wait
+
 WORKDIR /root/
-COPY --from=builder /go/src/github.com/alexellis/href-counter/app .
+
+COPY --from=builder /nostradamus/app .
 CMD ["./app"]  
